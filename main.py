@@ -3,18 +3,33 @@ from random import randrange
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
 from PyQt5.QtWidgets import QLabel, QPushButton, QComboBox
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import *
 
 
 class SettingsDialog(QDialog):
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
+        self.parent=parent
         self.setWindowTitle("Settings")
-        layout = QGridLayout()
+        layout = QFormLayout()
 
-        layout.addWidget(QComboBox(self))
+        side_num = QComboBox(self)
+        side_num.setEditable(True)
+        side_num.setInsertPolicy(False)
+        side_num.addItems(["4", "6", "8", "10", "12", "20"])
+        side_num.currentTextChanged.connect(self.side_num_change)
+        side_num.setCurrentText("6")
+        layout.addRow("# of Sides", side_num)
+      
+
+        self.setLayout(layout)
+
+    def side_num_change(self, value):
+        if (value.isdigit()):
+            self.parent.num_sides = int(value)
         
 
 
@@ -22,6 +37,10 @@ class MainWindow(QMainWindow):
     def __init__(self):
         #initializng window
         super().__init__()
+        #settings
+        self.num_sides=6
+
+
         self.setWindowTitle('Dice Game')
         self.resize(200,100)
 
@@ -31,6 +50,7 @@ class MainWindow(QMainWindow):
 
         #result
         self.result = QLabel(middle_widget)
+        self.result.setFont(QFont('Arial',20))
         middle_layout.addWidget(self.result, alignment= Qt.AlignHCenter)
 
         #button
@@ -61,10 +81,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def refresh_die(self):
-        self.result.setText(str(randrange(6)+1))
+        choice = str(randrange(self.num_sides)+1)
+        self.result.setText(choice)
     
     def settings_switch(self):
-        settings = SettingsDialog()
+        settings = SettingsDialog(self)
         settings.exec()
 
 
