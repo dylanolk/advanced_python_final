@@ -53,7 +53,6 @@ class BotPlayer(Player):
         BotPlayer.num_of_bots+=1
         super().__init__()
         layout = QFormLayout()
-        layout.addRow("Money", QLabel(str(self.money)))
 
         #name
         name= QLabel()
@@ -69,6 +68,9 @@ class BotPlayer(Player):
         main_widget.setLayout(layout)
 
         self.widget=main_widget
+    
+    def __del__(self):
+        BotPlayer.num_of_bots-=1
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
@@ -108,6 +110,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         #settings
         self.num_sides=6
+        self.bots=[]
         
 
 
@@ -173,11 +176,13 @@ class MainWindow(QMainWindow):
 
     def add_bot(self):
         newBot = BotPlayer()
+        self.bots.append(newBot)
         self.allWidgets.insert(len(self.allWidgets)-1,newBot.widget)
         self.render()
     
     def minus_bot(self):
         if(len(self.allWidgets)>3):
+            self.bots.pop()
             self.allWidgets.pop(len(self.allWidgets)-2)
             self.render()
         
