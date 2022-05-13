@@ -12,6 +12,9 @@ from PyQt5.QtCore import QCoreApplication,QRect, QSize, Qt, QMetaObject
 
 
 class Playground_Ui(object):
+    def __init__(self, object):
+        self.object = object    
+
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(726, 723)
@@ -110,8 +113,8 @@ class Playground_Ui(object):
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    Dialog = QDialog()
-    ui = Playground_Ui()
-    ui.setupUi(Dialog)
-    Dialog.show()
+    dialog = QDialog()
+    ui = Playground_Ui(dialog)
+    ui.setupUi(dialog)
+    dialog.show()
     sys.exit(app.exec_())
