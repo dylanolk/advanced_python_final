@@ -1,16 +1,23 @@
 import sys
-from random import randrange
+import random
+import re
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
-from PyQt5.QtWidgets import QLabel, QPushButton, QComboBox, QSpacerItem
+from PyQt5.QtWidgets import QLabel, QPushButton, QComboBox, QSpacerItem, QLineEdit
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 
+def generate_random_bet(num_sides):
+    temp= list(range(1,num_sides))
+    random.shuffle(temp)
+    return temp[:random.randrange(1,num_sides)]
+
 class Player:
     def __init__(self):
         self.money= 100
+        self.bet = 0
         self.isHuman = False
         self.winningNumbers=[]
         self.widget = QWidget()
@@ -18,10 +25,11 @@ class Player:
 
 class HumanPlayer(Player):
     num_of_humans=0
-    def __init__(self):
+    def __init__(self,parent):
         HumanPlayer.num_of_humans+=1
         super().__init__()
         self.isHuman = True
+        self.parent = parent
 
         layout = QFormLayout()
 
@@ -32,8 +40,12 @@ class HumanPlayer(Player):
         layout.addWidget(name)
 
         #money label
-        money = QLabel(f"Money:  ${str(self.money)}")
-        layout.addWidget(money)
+        self.money_label = QLabel(f"Money:  ${str(self.money)}")
+        layout.addWidget(self.money_label)
+
+        #current bet
+        self.bet_label = QLabel(f"Current Bet:  ${str(self.bet)}")
+        layout.addWidget(self.bet_label)
 
         #bet button
         bet_button= QPushButton()
@@ -42,10 +54,114 @@ class HumanPlayer(Player):
         layout.addWidget(bet_button)
 
         self.widget.setLayout(layout)
-    def bet_dialog():
-        return
 
-  
+    def bet_dialog(self):
+        dialog = BetDialog(self)
+        dialog.exec()
+    
+    def make_bet(self, choice, num_sides):
+        if int(choice) not in self.winningNumbers:
+            self.money-=self.bet
+        if int(choice) in self.winningNumbers:
+            self.money += int(self.bet * num_sides/len(self.winningNumbers))-self.bet
+
+        self.money_label.setText(f"Money:  ${str(self.money)}")
+
+class BetDialog(QDialog):
+    def __init__(self,parent):
+        super().__init__()
+        self.setWindowTitle("Place your bets!")
+        self.parent = parent
+
+        left_layout = QVBoxLayout()
+        left_layout.addWidget(QLabel("Bet Amount"))
+
+        #bet amount
+        bet_amount = QLineEdit()
+        bet_amount.textChanged.connect(self.handle_bet_amount)
+        left_layout.addWidget(bet_amount)
+        self.bet_error = QLabel()
+        left_layout.addWidget(self.bet_error)
+
+        #bets
+        right_layout = QVBoxLayout()
+        right_layout.addWidget(QLabel("Bet on..."))
+
+        #buttons
+        evens = QPushButton()
+        evens.setText("Evens")
+        evens.clicked.connect(lambda: self.handle_buttons("evens"))
+        right_layout.addWidget(evens)
+
+        odds = QPushButton()
+        odds.setText("Odds")
+        odds.clicked.connect(lambda: self.handle_buttons("odds"))
+        right_layout.addWidget(odds)
+
+        random = QPushButton()
+        random.setText("Random")
+        random.clicked.connect(lambda: self.handle_buttons("random"))
+        right_layout.addWidget(random)
+
+        right_layout.addWidget(QLabel("Custom..."))
+        custom = QLineEdit()
+        custom.textChanged.connect(self.custom_bet)
+        self.custom=custom
+        right_layout.addWidget(custom)
+
+        close=QPushButton()
+        close.setText("Close")
+        close.clicked.connect(self.close)
+        right_layout.addWidget(close,alignment = Qt.AlignRight)
+
+        self.button_error = QLabel()
+        right_layout.addWidget(self.button_error)
+        
+        #finalize
+        leftWidget= QWidget()
+        rightWidget = QWidget()
+        leftWidget.setLayout(left_layout)
+        rightWidget.setLayout(right_layout)
+        
+        final_layout = QHBoxLayout()
+        final_layout.addWidget(leftWidget)
+        final_layout.addWidget(rightWidget)
+        self.setLayout(final_layout)
+
+    def handle_buttons(self, bet):
+        if bet == "evens":
+            temp = list(range(self.parent.parent.num_sides))
+            self.parent.winningNumbers = [i for i in temp if i % 2 == 0]
+            self.button_error.setText("Betting on Evens!")
+        if bet == "odds":
+            temp = list(range(self.parent.parent.num_sides))
+            self.parent.winningNumbers = [i for i in temp if i % 2 == 1]
+            self.button_error.setText("Betting on Odds!")
+        if bet == "random":
+            self.parent.winningNumbers = generate_random_bet(self.parent.parent.num_sides)
+            self.button_error.setText("Betting randomly! Very bold!")
+        self.custom.setText(str(self.parent.winningNumbers)[1:-1])
+        self.parent.bet_label.setText(f"Current Bet:  ${str(self.parent.bet)}")
+        
+    def handle_bet_amount(self, value):
+        if value.isdigit():
+            self.parent.bet= int(value)
+            self.bet_error.setText("")
+        elif value != "":
+            self.bet_error.setText("Bet must be integer!")
+        self.parent.bet_label.setText(f"Current Bet:  ${str(self.parent.bet)}")
+    
+    def custom_bet(self,value):
+        r= re.compile("^([0-9]*,\s*)*[0-9]+$")
+        
+        if r.match(value):
+            print(r.match(value))
+            temp = value.split(',')
+            self.parent.winningNumbers= [int(i) for i in temp]
+            self.button_error.setText("Using Custom Bet!")
+        else:
+           self.button_error.setText("Custom bet must have format 1,2,3,4,5 \n(comma seprated integers)")
+
 
 class BotPlayer(Player):
     num_of_bots=0
@@ -61,8 +177,18 @@ class BotPlayer(Player):
         layout.addWidget(name)
 
         #money label
-        money = QLabel(f"Money:  ${str(self.money)}")
-        layout.addWidget(money)
+        self.money_label = QLabel(f"Money:  ${str(self.money)}")
+        layout.addWidget(self.money_label)
+
+        #current bet
+        self.bet_label = QLabel(f"Current Bet: ${str(self.bet)}")
+        layout.addWidget(self.bet_label)
+
+        #check winning numbers button
+        self.bet_button = QPushButton()
+        self.bet_button.setText("Winning Numbers")
+        self.bet_button.clicked.connect(self.numbers_dialog)
+        layout.addWidget(self.bet_button)
 
         main_widget = QWidget()
         main_widget.setLayout(layout)
@@ -71,6 +197,34 @@ class BotPlayer(Player):
     
     def __del__(self):
         BotPlayer.num_of_bots-=1
+    
+    def make_bet(self, choice, num_sides):
+        self.bet=random.choice(range(100))
+        self.bet_label.setText(f"Current Bet: ${str(self.bet)}")
+        self.winningNumbers= generate_random_bet(num_sides)
+
+        if int(choice) not in self.winningNumbers:
+            self.money -= self.bet
+        if int(choice) in self.winningNumbers:
+            self.money += int(self.bet * num_sides/len(self.winningNumbers))-self.bet
+
+        self.money_label.setText(f"Money:  ${str(self.money)}")
+    
+    def numbers_dialog(self):
+        dialog = NumbersDialog(self)
+        dialog.exec()
+
+class NumbersDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__()
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("If the dice has landed on any \nof these numbers, this bot has won"))
+        layout.addWidget(QLabel(str(parent.winningNumbers)[1:-1]))
+        close = QPushButton()
+        close.setText("Close")
+        close.clicked.connect(self.close)
+        self.setLayout(layout)
+
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
@@ -111,6 +265,7 @@ class MainWindow(QMainWindow):
         #settings
         self.num_sides=6
         self.bots=[]
+        self.humans=[]
         
 
 
@@ -142,8 +297,11 @@ class MainWindow(QMainWindow):
         
         main_widget.setLayout(main_layout)
 
+        self.main_widget=main_widget
+
         #initialize human player
-        player= HumanPlayer()
+        player= HumanPlayer(self)
+        self.humans.append(player)
 
         #make bot buttons
         bot_adder=QWidget()
@@ -159,6 +317,7 @@ class MainWindow(QMainWindow):
         adder_layout.addWidget(add_button)
         adder_layout.addWidget(minus_button)
         bot_adder.setLayout(adder_layout)
+        self.bot_adder=bot_adder
 
         #initialize final layout
         self.allWidgets.append(player.widget)
@@ -167,8 +326,9 @@ class MainWindow(QMainWindow):
         self.render()
 
     def refresh_die(self):
-        choice = str(randrange(self.num_sides)+1)
+        choice = str(random.randrange(self.num_sides)+1)
         self.result.setText(choice)
+        self.deal_with_bets(choice)
     
     def settings_switch(self):
         settings = SettingsDialog(self)
@@ -189,15 +349,33 @@ class MainWindow(QMainWindow):
     def render(self):
         final_layout = QHBoxLayout()
         central_widget = QWidget()
-        for widget in self.allWidgets:
-            final_layout.addWidget(widget, alignment=Qt.AlignHCenter)
+    
+        #render humans
+        for human in self.humans:
+            final_layout.addWidget(human.widget)
+
+        #render central widget
+        final_layout.addWidget(self.main_widget)
+
+        #render bots
+        for bot in self.bots:
+            final_layout.addWidget(bot.widget)
+
+        #render adder module
+        final_layout.addWidget(self.bot_adder)
+
         central_widget.setLayout(final_layout)
         self.setCentralWidget(central_widget)
 
-
+    def deal_with_bets(self, choice):
+        players= self.bots + self.humans
+        for player in players: 
+            player.make_bet(choice, self.num_sides)
+        self.render()
 
 
 if __name__ == "__main__":
+    # print(generate_random_bet(6))
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
