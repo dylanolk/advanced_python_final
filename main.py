@@ -74,7 +74,8 @@ class BetDialog(QDialog):
         super().__init__()
         self.setWindowTitle("Place your bets!")
         self.parent = parent
-        self.setStyleSheet("background-color: #FF66BB6A;")
+        self.setStyleSheet("background-color: #228C22;")
+
         left_layout = QVBoxLayout()
         left_layout.addWidget(QLabel("Bet Amount"))
 
@@ -226,7 +227,7 @@ class BotPlayer(Player):
 class NumbersDialog(QDialog):
     def __init__(self, parent):
         super().__init__()
-        self.setStyleSheet("background-color: #FF66BB6A;")
+        self.setStyleSheet("background-color: #228C22;")
         layout = QHBoxLayout()
         layout.addWidget(QLabel("If the dice has landed on any \nof these numbers, this bot has won"))
         layout.addWidget(QLabel(str(parent.winningNumbers)[1:-1]))
@@ -241,7 +242,7 @@ class SettingsDialog(QDialog):
         super().__init__()
         self.parent=parent
         self.setWindowTitle("Settings")
-        self.setStyleSheet("background-color: #FF66BB6A")
+        self.setStyleSheet("background-color: #228C22")
         layout = QFormLayout()
 
         #creating drop down menu
