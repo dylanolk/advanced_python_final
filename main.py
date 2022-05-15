@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout
 from PyQt5.QtWidgets import QWidget, QFrame
 from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import *
+from matplotlib.style import available
 
 def generate_random_bet(num_sides):
     temp= list(range(1,num_sides))
@@ -149,11 +150,13 @@ class BetDialog(QDialog):
         self.parent.bet_label.setText(f"Current Bet:  ${str(self.parent.bet)}")
         
     def handle_bet_amount(self, value):
+        
         if value.isdigit():
             self.parent.bet= int(value)
             self.bet_error.setText("")
         elif value != "":
             self.bet_error.setText("Bet must be integer!")
+
         self.parent.bet_label.setText(f"Current Bet:  ${str(self.parent.bet)}")
     
     def custom_bet(self,value):
@@ -256,7 +259,6 @@ class SettingsDialog(QDialog):
         close_button.clicked.connect(self.close)
         layout.addWidget(close_button)
       
-
         self.setLayout(layout)
 
     def side_num_change(self, value):
@@ -278,7 +280,7 @@ class MainWindow(QMainWindow):
         self.allWidgets=[]
 
         self.setWindowTitle('Dice Game')
-        self.resize(600, 600)
+        self.resize(600, 300)
         self.setStyleSheet("background-color: #005C29;")
 
         #ininitializing main layout
