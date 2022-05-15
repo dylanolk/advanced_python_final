@@ -35,12 +35,12 @@ class HumanPlayer(Player):
 
         #name
         name= QLabel()
-        name.setText(f"Human {self.num_of_humans}")
+        name.setText(f"Human Player {self.num_of_humans}")
         name.setFont(QFont('Arial',12))
         layout.addWidget(name)
 
         #money label
-        self.money_label = QLabel(f"Money:  ${str(self.money)}")
+        self.money_label = QLabel(f"Account Balance:  ${str(self.money)}")
         layout.addWidget(self.money_label)
 
         #current bet
@@ -66,7 +66,7 @@ class HumanPlayer(Player):
         if int(choice) in self.winningNumbers:
             self.money += int(self.bet * num_sides/len(self.winningNumbers))-self.bet
 
-        self.money_label.setText(f"Money:  ${str(self.money)}")
+        self.money_label.setText(f"Account Balance:  ${str(self.money)}")
 
 class BetDialog(QDialog):
     def __init__(self,parent):
@@ -182,7 +182,7 @@ class BotPlayer(Player):
         layout.addWidget(name)
 
         #money label
-        self.money_label = QLabel(f"Money:  ${str(self.money)}")
+        self.money_label = QLabel(f"Account Balance:  ${str(self.money)}")
         layout.addWidget(self.money_label)
 
         #current bet
@@ -214,7 +214,7 @@ class BotPlayer(Player):
         if int(choice) in self.winningNumbers:
             self.money += int(self.bet * num_sides/len(self.winningNumbers))-self.bet
 
-        self.money_label.setText(f"Money:  ${str(self.money)}")
+        self.money_label.setText(f"Account Balance:  ${str(self.money)}")
     
     def numbers_dialog(self):
         dialog = NumbersDialog(self)
