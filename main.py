@@ -5,9 +5,10 @@ import re
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
 from PyQt5.QtWidgets import QLabel, QPushButton, QComboBox, QSpacerItem, QLineEdit
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QFrame
+from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import *
+from matplotlib.style import available
 
 def generate_random_bet(num_sides):
     temp= list(range(1,num_sides))
@@ -35,12 +36,12 @@ class HumanPlayer(Player):
 
         #name
         name= QLabel()
-        name.setText(f"Human {self.num_of_humans}")
-        name.setFont(QFont('Arial',9))
+        name.setText(f"Human Player {self.num_of_humans}")
+        name.setFont(QFont('Arial',12))
         layout.addWidget(name)
 
         #money label
-        self.money_label = QLabel(f"Money:  ${str(self.money)}")
+        self.money_label = QLabel(f"Account Balance:  ${str(self.money)}")
         layout.addWidget(self.money_label)
 
         #current bet
@@ -49,6 +50,7 @@ class HumanPlayer(Player):
 
         #bet button
         bet_button= QPushButton()
+        bet_button.setStyleSheet("background-color: #CA3433")
         bet_button.setText("Place A Bet")
         bet_button.clicked.connect(self.bet_dialog)
         layout.addWidget(bet_button)
@@ -65,13 +67,14 @@ class HumanPlayer(Player):
         if int(choice) in self.winningNumbers:
             self.money += int(self.bet * num_sides/len(self.winningNumbers))-self.bet
 
-        self.money_label.setText(f"Money:  ${str(self.money)}")
+        self.money_label.setText(f"Account Balance:  ${str(self.money)}")
 
 class BetDialog(QDialog):
     def __init__(self,parent):
         super().__init__()
         self.setWindowTitle("Place your bets!")
         self.parent = parent
+        self.setStyleSheet("background-color: #228C22;")
 
         left_layout = QVBoxLayout()
         left_layout.addWidget(QLabel("Bet Amount"))
@@ -89,16 +92,19 @@ class BetDialog(QDialog):
 
         #buttons
         evens = QPushButton()
+        evens.setStyleSheet("background-color: #CA3433")
         evens.setText("Evens")
         evens.clicked.connect(lambda: self.handle_buttons("evens"))
         right_layout.addWidget(evens)
 
         odds = QPushButton()
+        odds.setStyleSheet("background-color: #CA3433")
         odds.setText("Odds")
         odds.clicked.connect(lambda: self.handle_buttons("odds"))
         right_layout.addWidget(odds)
 
         random = QPushButton()
+        random.setStyleSheet("background-color: #CA3433")
         random.setText("Random")
         random.clicked.connect(lambda: self.handle_buttons("random"))
         right_layout.addWidget(random)
@@ -110,6 +116,7 @@ class BetDialog(QDialog):
         right_layout.addWidget(custom)
 
         close=QPushButton()
+        close.setStyleSheet("background-color: #CA3433")
         close.setText("Close")
         close.clicked.connect(self.close)
         right_layout.addWidget(close,alignment = Qt.AlignRight)
@@ -144,11 +151,13 @@ class BetDialog(QDialog):
         self.parent.bet_label.setText(f"Current Bet:  ${str(self.parent.bet)}")
         
     def handle_bet_amount(self, value):
+        
         if value.isdigit():
             self.parent.bet= int(value)
             self.bet_error.setText("")
         elif value != "":
             self.bet_error.setText("Bet must be integer!")
+
         self.parent.bet_label.setText(f"Current Bet:  ${str(self.parent.bet)}")
     
     def custom_bet(self,value):
@@ -173,11 +182,11 @@ class BotPlayer(Player):
         #name
         name= QLabel()
         name.setText(f"Bot {self.num_of_bots}")
-        name.setFont(QFont('Arial',9))
+        name.setFont(QFont('Arial',12))
         layout.addWidget(name)
 
         #money label
-        self.money_label = QLabel(f"Money:  ${str(self.money)}")
+        self.money_label = QLabel(f"Account Balance:  ${str(self.money)}")
         layout.addWidget(self.money_label)
 
         #current bet
@@ -186,6 +195,7 @@ class BotPlayer(Player):
 
         #check winning numbers button
         self.bet_button = QPushButton()
+        self.bet_button.setStyleSheet("background-color: #CA3433")
         self.bet_button.setText("Winning Numbers")
         self.bet_button.clicked.connect(self.numbers_dialog)
         layout.addWidget(self.bet_button)
@@ -208,7 +218,7 @@ class BotPlayer(Player):
         if int(choice) in self.winningNumbers:
             self.money += int(self.bet * num_sides/len(self.winningNumbers))-self.bet
 
-        self.money_label.setText(f"Money:  ${str(self.money)}")
+        self.money_label.setText(f"Account Balance:  ${str(self.money)}")
     
     def numbers_dialog(self):
         dialog = NumbersDialog(self)
@@ -217,6 +227,7 @@ class BotPlayer(Player):
 class NumbersDialog(QDialog):
     def __init__(self, parent):
         super().__init__()
+        self.setStyleSheet("background-color: #228C22;")
         layout = QHBoxLayout()
         layout.addWidget(QLabel("If the dice has landed on any \nof these numbers, this bot has won"))
         layout.addWidget(QLabel(str(parent.winningNumbers)[1:-1]))
@@ -231,6 +242,7 @@ class SettingsDialog(QDialog):
         super().__init__()
         self.parent=parent
         self.setWindowTitle("Settings")
+        self.setStyleSheet("background-color: #228C22")
         layout = QFormLayout()
 
         #creating drop down menu
@@ -248,7 +260,6 @@ class SettingsDialog(QDialog):
         close_button.clicked.connect(self.close)
         layout.addWidget(close_button)
       
-
         self.setLayout(layout)
 
     def side_num_change(self, value):
@@ -267,12 +278,11 @@ class MainWindow(QMainWindow):
         self.bots=[]
         self.humans=[]
         
-
-
         self.allWidgets=[]
 
         self.setWindowTitle('Dice Game')
-        self.resize(400,100)
+        self.resize(600, 300)
+        self.setStyleSheet("background-color: #005C29;")
 
         #ininitializing main layout
         main_widget = QWidget()
@@ -280,6 +290,7 @@ class MainWindow(QMainWindow):
 
         #settings button
         settings_button= QPushButton(main_widget)
+        settings_button.setStyleSheet("background-color: #CA3433")
         settings_button.setText("Settings")
         settings_button.clicked.connect(self.settings_switch)
         main_layout.addWidget(settings_button, alignment=Qt.AlignRight)
@@ -291,7 +302,9 @@ class MainWindow(QMainWindow):
 
         #button
         button1= QPushButton(main_widget)
+        button1.setStyleSheet("background-color: #CA3433")
         button1.setText("Roll Die")
+
         button1.clicked.connect(self.refresh_die)
         main_layout.addWidget(button1)
         
@@ -309,7 +322,9 @@ class MainWindow(QMainWindow):
 
         add_button = QPushButton()
         minus_button = QPushButton()
+        add_button.setStyleSheet("background-color: #CA3433")
         add_button.setText("+")
+        minus_button.setStyleSheet("background-color: #CA3433")
         minus_button.setText("-")
         add_button.clicked.connect(self.add_bot)
         minus_button.clicked.connect(self.minus_bot)
@@ -327,6 +342,7 @@ class MainWindow(QMainWindow):
 
     def refresh_die(self):
         choice = str(random.randrange(self.num_sides)+1)
+        
         self.result.setText(choice)
         self.deal_with_bets(choice)
     
